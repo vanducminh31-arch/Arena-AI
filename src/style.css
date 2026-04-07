@@ -15,9 +15,9 @@
   --gradient-main: linear-gradient(135deg, var(--primary-violet), var(--accent-cyan));
   
   /* Layout */
-  --gap: 2rem;
-  --container-max: 1200px;
-  --navbar-height: 80px;
+  --gap: clamp(1rem, 3vw, 2rem);
+  --container-max: 1100px;
+  --navbar-height: 70px;
   
   /* Fonts */
   --font-main: 'Inter', sans-serif;
@@ -48,7 +48,7 @@ h1, h2, h3 {
 .container {
   max-width: var(--container-max);
   margin: 0 auto;
-  padding: 0 2rem;
+  padding: 0 clamp(1rem, 5vw, 2.5rem);
 }
 
 .text-muted {
@@ -117,7 +117,7 @@ h1, h2, h3 {
 
 .nav-links {
   display: flex;
-  gap: 2.5rem;
+  gap: clamp(1rem, 2vw, 2.5rem);
   list-style: none;
 }
 
@@ -174,18 +174,18 @@ h1, h2, h3 {
 
 /* Hero Section */
 .hero {
-  padding: calc(var(--navbar-height) + 100px) 0 100px;
+  padding: calc(var(--navbar-height) + clamp(40px, 10vh, 100px)) 0 clamp(40px, 10vh, 100px);
   text-align: center;
 }
 
 .hero-content h1 {
-  font-size: 4.5rem;
+  font-size: clamp(2.5rem, 8vw, 4.5rem);
   line-height: 1.1;
   margin-bottom: 1.5rem;
 }
 
 .hero-content p {
-  font-size: 1.25rem;
+  font-size: clamp(1rem, 2vw, 1.25rem);
   max-width: 700px;
   margin: 0 auto 2.5rem;
 }
@@ -210,16 +210,16 @@ h1, h2, h3 {
 
 /* Leaderboard */
 .leaderboard {
-  padding: 100px 0;
+  padding: clamp(50px, 10vh, 100px) 0;
 }
 
 .section-header {
   text-align: center;
-  margin-bottom: 4rem;
+  margin-bottom: clamp(2rem, 5vh, 4rem);
 }
 
 .section-header h2 {
-  font-size: 3rem;
+  font-size: clamp(2rem, 5vw, 3rem);
 }
 
 .leaderboard-card {
@@ -338,8 +338,8 @@ h1, h2, h3 {
 
 .battle-results {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 1.5rem;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
+  gap: 1.25rem;
 }
 
 .result-column {
@@ -402,7 +402,16 @@ h1, h2, h3 {
 }
 
 /* Responsive */
+@media (max-width: 1024px) {
+  .hero-content h1 {
+    font-size: 3.5rem;
+  }
+}
+
 @media (max-width: 768px) {
+  :root {
+    --navbar-height: 60px;
+  }
   .hero-content h1 {
     font-size: 2.5rem;
   }
@@ -410,9 +419,24 @@ h1, h2, h3 {
     display: none;
   }
   .leaderboard-table-header, .leaderboard-row {
-    grid-template-columns: 1.5fr 1fr 1fr;
+    grid-template-columns: 1.2fr 1fr 0.8fr;
+    font-size: 0.8rem;
+    padding: 1rem 0.5rem;
   }
   .col:nth-child(4), .col:nth-child(5) {
     display: none;
+  }
+  .battle-card {
+    padding: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .hero-cta {
+    flex-direction: column;
+    width: 100%;
+  }
+  .btn {
+    width: 100%;
   }
 }
