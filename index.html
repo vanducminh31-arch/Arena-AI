@@ -108,28 +108,9 @@
                 <button id="btn-battle" class="btn btn-primary">Invoke Battle</button>
               </div>
 
-              <div class="arena-grid">
-                <!-- Arena 1 -->
-                <div class="result-column">
-                  <header style="margin-bottom: var(--space-3);">
-                    <select class="model-selector glass-input" style="padding: 4px 8px; font-size: 0.75rem; width: auto; background: var(--primary-gradient); border: none; font-weight: 700; text-transform: uppercase; cursor: pointer;"></select>
-                  </header>
-                  <div id="gemini-output" style="color: var(--text-secondary); font-size: 0.9rem; white-space: pre-wrap;">Awaiting input...</div>
-                </div>
-                <!-- Arena 2 -->
-                <div class="result-column">
-                  <header style="margin-bottom: var(--space-3);">
-                    <select class="model-selector glass-input" style="padding: 4px 8px; font-size: 0.75rem; width: auto; background: #ef4444; border: none; font-weight: 700; text-transform: uppercase; cursor: pointer;"></select>
-                  </header>
-                  <div id="groq1-output" style="color: var(--text-secondary); font-size: 0.9rem; white-space: pre-wrap;">Awaiting input...</div>
-                </div>
-                <!-- Arena 3 -->
-                <div class="result-column">
-                  <header style="margin-bottom: var(--space-3);">
-                    <select class="model-selector glass-input" style="padding: 4px 8px; font-size: 0.75rem; width: auto; background: #10b981; border: none; font-weight: 700; text-transform: uppercase; cursor: pointer;"></select>
-                  </header>
-                  <div id="groq2-output" style="color: var(--text-secondary); font-size: 0.9rem; white-space: pre-wrap;">Awaiting input...</div>
-                </div>
+              <!-- Dynamic Arena Grid Container -->
+              <div id="arena-dynamic-grid" class="arena-grid">
+                <!-- Boxes generated via JavaScript -->
               </div>
             </div>
           </section>

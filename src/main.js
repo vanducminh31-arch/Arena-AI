@@ -12,14 +12,14 @@ const models = [
 ];
 
 const availableModels = [
-  { id: 'gemini-1.5-flash', name: 'Gemini 1.5 Flash', provider: 'Google' },
-  { id: 'gemini-1.5-pro', name: 'Gemini 1.5 Pro', provider: 'Google' },
-  { id: 'gemini-2.0-flash-exp', name: 'Gemini 2.0 Flash', provider: 'Google' },
-  { id: 'deepseek-r1-distill-llama-70b', name: 'DeepSeek R1 70B', provider: 'Groq' },
-  { id: 'llama-3.3-70b-versatile', name: 'Llama 3.3 70B', provider: 'Groq' },
-  { id: 'mixtral-8x7b-32768', name: 'Mixtral 8x7B', provider: 'Groq' },
-  { id: 'gemma2-9b-it', name: 'Gemma 2 9B', provider: 'Groq' },
-  { id: 'qwen-2.5-32b', name: 'Qwen 2.5 32B', provider: 'Groq' }
+  { id: 'openai/gpt-oss-120b', name: 'GPT OSS 120B', color: 'var(--primary-gradient)' },
+  { id: 'openai/gpt-oss-20b', name: 'GPT OSS 20B', color: '#8b5cf6' },
+  { id: 'qwen-3-32b', name: 'Qwen 3 32B', color: '#ec4899' },
+  { id: 'meta-llama/llama-4-scout-17b-16e-instruct', name: 'Llama 4 Scout', color: '#ef4444' },
+  { id: 'deepseek-r1-distill-llama-70b', name: 'DeepSeek R1 70B', color: '#3b82f6' },
+  { id: 'llama-3.3-70b-versatile', name: 'Llama 3.3 70B', color: '#10b981' },
+  { id: 'mixtral-8x7b-32768', name: 'Mixtral 8x7B', color: '#f59e0b' },
+  { id: 'qwen-2.5-32b', name: 'Qwen 2.5 32B', color: '#06b6d4' }
 ];
 
 // --- Navigation Logic ---
@@ -342,39 +342,45 @@ function initCodebaseAgent() {
 function initArenaBattle() {
     const btnBattle = document.getElementById('btn-battle');
     const inputPrompt = document.getElementById('battle-prompt');
-    const arenas = document.querySelectorAll('.result-column');
-    const outputs = [
-        document.getElementById('gemini-output'),
-        document.getElementById('groq1-output'),
-        document.getElementById('groq2-output')
-    ];
+    const arenaGrid = document.getElementById('arena-dynamic-grid');
 
-    if (!btnBattle) return;
+    if (!btnBattle || !arenaGrid) return;
 
-    // Populate dropdowns
-    const dropdowns = document.querySelectorAll('.model-selector');
-    dropdowns.forEach((dd, idx) => {
-        dd.innerHTML = availableModels.map(m => `
-            <option value="${m.id}" ${idx === 0 && m.id === 'gemini-1.5-flash' ? 'selected' : ''} 
-                    ${idx === 1 && m.id === 'deepseek-r1-distill-llama-70b' ? 'selected' : ''}
-                    ${idx === 2 && m.id === 'llama-3.3-70b-versatile' ? 'selected' : ''}>
-                ${m.name}
-            </option>
+    // Render Initial Dynamic Boxes
+    function renderArenaBoxes() {
+        arenaGrid.innerHTML = availableModels.map(model => `
+            <div class="result-column arena-box" data-model="${model.id}">
+                <div class="arena-box-header">
+                    <span class="model-badge" style="background: ${model.color || 'var(--surface-color)'}">${model.name}</span>
+                    <span class="status-indicator">Idle</span>
+                </div>
+                <div class="arena-output-container scroll-container" id="output-${model.id.replace(/[\/\.]/g, '-')}">
+                    <p class="placeholder-text">Awaiting input...</p>
+                </div>
+            </div>
         `).join('');
-    });
+    }
+
+    renderArenaBoxes();
 
     btnBattle.addEventListener('click', async () => {
         const prompt = inputPrompt.value.trim();
         if (!prompt) return;
 
-        const loadingHtml = '<div class="typing-indicator"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div>';
         btnBattle.disabled = true;
-        btnBattle.textContent = 'Battling...';
+        btnBattle.textContent = 'Invoking Multi-AI...';
 
-        outputs.forEach(out => out.innerHTML = loadingHtml);
+        const boxes = document.querySelectorAll('.arena-box');
+        boxes.forEach(box => {
+            const output = box.querySelector('.arena-output-container');
+            const status = box.querySelector('.status-indicator');
+            output.innerHTML = '<div class="typing-indicator"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div>';
+            status.textContent = 'Thinking...';
+            status.style.color = 'var(--accent-color)';
+        });
 
-        // Get selected models
-        const selectedModels = Array.from(dropdowns).map(dd => dd.value);
+        // Get all model IDs
+        const selectedModels = availableModels.map(m => m.id);
 
         try {
             const response = await fetch(`${API_BASE}/api/arena/chat`, {
@@ -382,24 +388,49 @@ function initArenaBattle() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ prompt, models: selectedModels })
             });
+
             const data = await response.json();
             if (data.error) throw new Error(data.error);
 
-            // Populate outputs mapped by results
-            data.results.forEach((res, i) => {
-                outputs[i].textContent = res.output;
-                outputs[i].style.color = res.output.startsWith('Error') ? '#f43f5e' : '';
+            // Populate each output box based on API response
+            data.results.forEach((res) => {
+                const safeId = res.modelId.replace(/[\/\.]/g, '-');
+                const outputEl = document.getElementById(`output-${safeId}`);
+                const boxEl = outputEl?.parentElement;
+                const statusEl = boxEl?.querySelector('.status-indicator');
+
+                if (outputEl) {
+                    if (res.output.startsWith('Error')) {
+                        outputEl.textContent = res.output;
+                        outputEl.style.color = '#f43f5e';
+                        if (statusEl) {
+                            statusEl.textContent = 'Failed';
+                            statusEl.style.color = '#f43f5e';
+                        }
+                    } else {
+                        outputEl.textContent = res.output;
+                        outputEl.style.color = 'var(--text-primary)';
+                        if (statusEl) {
+                            statusEl.textContent = 'Ready';
+                            statusEl.style.color = '#10b981';
+                        }
+                    }
+                }
             });
 
         } catch (error) {
-            const errText = 'Error: ' + error.message;
-            outputs.forEach(out => {
-                out.textContent = errText;
-                out.style.color = '#f87171';
+            console.error("Battle Error:", error);
+            boxes.forEach(box => {
+                const output = box.querySelector('.arena-output-container');
+                const status = box.querySelector('.status-indicator');
+                output.textContent = 'Critical Error: ' + error.message;
+                output.style.color = '#f43f5e';
+                status.textContent = 'Error';
+                status.style.color = '#f43f5e';
             });
         } finally {
             btnBattle.disabled = false;
-            btnBattle.textContent = 'Send Prompt';
+            btnBattle.textContent = 'Invoke Battle';
         }
     });
 

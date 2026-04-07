@@ -1,7 +1,6 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import { GoogleGenerativeAI } from '@google/generative-ai';
 import Groq from 'groq-sdk';
 import multer from 'multer';
 import unzipper from 'unzipper';
@@ -24,7 +23,6 @@ app.get('/health', (req, res) => {
 });
 
 // Initialize AI Clients
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
 // Global Memory Store for Codebase Sessions
@@ -129,10 +127,15 @@ app.post('/api/agent-task', async (req, res) => {
 
         const finalPrompt = `System Directive: ${systemDirectives}\nTask: ${task}\n\n${contextBlock}\n\nAnalyze and provide your response:`;
 
-        // Use Gemini 1.5 Flash for speed and higher quota limits
-        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-        const r = await model.generateContent(finalPrompt);
-        const textResponse = (await r.response).text();
+        // Use Llama 3.3 70B on Groq for codebase analysis (High reliability)
+        const chatCompletion = await groq.chat.completions.create({
+            messages: [
+                { role: 'system', content: systemDirectives },
+                { role: 'user', content: finalPrompt }
+            ],
+            model: 'llama-3.3-70b-versatile',
+        });
+        const textResponse = chatCompletion.choices[0]?.message?.content || "No response.";
 
         // Parse filesModified from the response
         const filesModified = [];
@@ -156,7 +159,7 @@ app.post('/api/agent-task', async (req, res) => {
             agentRole,
             task,
             timestamp: new Date().toISOString(),
-            model: 'gemini-1.5-flash',
+            model: 'llama-3.3-70b-versatile',
             filesModified: filesModified.map(f => f.filename),
             outputPreview: textResponse.substring(0, 500)
         };
@@ -297,23 +300,15 @@ app.post('/api/arena/chat', async (req, res) => {
     try {
         const results = await Promise.all(selectedModels.map(async (modelId) => {
             try {
-                // Determine Provider
-                if (modelId.startsWith('gemini-')) {
-                    const model = genAI.getGenerativeModel({ model: modelId });
-                    const promptWithLang = `Instruction: Always respond in Vietnamese even if the prompt is in English, unless the user specifically asks for an English response. \n\nUser Prompt: ${prompt}`;
-                    const r = await model.generateContent(promptWithLang);
-                    return (await r.response).text();
-                } else {
-                    // Default to Groq for other IDs
-                    const response = await groq.chat.completions.create({
-                        messages: [
-                            { role: 'system', content: 'Always respond in Vietnamese unless requested otherwise. Use clear formatting.' },
-                            { role: 'user', content: prompt }
-                        ],
-                        model: modelId,
-                    });
-                    return response.choices[0]?.message?.content || "No response from model.";
-                }
+                // All models go through Groq now
+                const response = await groq.chat.completions.create({
+                    messages: [
+                        { role: 'system', content: 'Always respond in Vietnamese unless requested otherwise. Use clear formatting.' },
+                        { role: 'user', content: prompt }
+                    ],
+                    model: modelId,
+                });
+                return response.choices[0]?.message?.content || "No response from model.";
             } catch (err) {
                 console.error(`Error with model ${modelId}:`, err);
                 return `Error [${modelId}]: ${err.message}`;
