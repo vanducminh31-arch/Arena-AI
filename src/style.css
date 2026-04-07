@@ -326,31 +326,92 @@ h1, h2, h3, h4 {
 /* Arena Grid */
 .arena-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
   gap: var(--space-6);
+  margin-top: var(--space-6);
 }
 
-.result-column {
+.arena-box {
   background: rgba(255, 255, 255, 0.02);
   border: 1px solid var(--border-subtle);
-  border-radius: 12px;
-  padding: var(--space-4);
-  min-height: 200px;
-  display: flex;
+  border-radius: 16px;
+  padding: var(--space-5);
+  display: flex !important;
   flex-direction: column;
+  transition: var(--transition);
+  height: 480px; /* Chiều cao cố định cho mỗi box */
+}
+
+.arena-box:hover {
+  border-color: var(--border-hover);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.arena-box-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-4);
+  flex-shrink: 0;
 }
 
 .model-badge {
-  font-size: 0.75rem;
-  font-weight: 700;
+  font-size: 0.7rem;
+  font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  padding: 4px 10px;
-  background: var(--primary-gradient);
+  padding: 4px 12px;
   border-radius: 100px;
-  width: fit-content;
-  margin-bottom: var(--space-3);
   color: white;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+
+.status-indicator {
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  letter-spacing: 1px;
+}
+
+.arena-output-container {
+  flex: 1;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 12px;
+  padding: var(--space-4);
+  font-size: 0.9rem;
+  line-height: 1.6;
+  color: var(--text-secondary);
+  overflow-y: auto; /* Kích hoạt thanh cuộn dọc */
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255,255,255,0.1) transparent;
+}
+
+/* Tùy chỉnh thanh cuộn cho Chrome/Safari */
+.arena-output-container::-webkit-scrollbar {
+  width: 6px;
+}
+
+.arena-output-container::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.arena-output-container::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+}
+
+.arena-output-container::-webkit-scrollbar-thumb:hover {
+  background: var(--primary-violet);
+}
+
+.placeholder-text {
+  color: var(--text-muted);
+  font-style: italic;
+  opacity: 0.5;
+  text-align: center;
+  margin-top: 2rem;
 }
 
 /* Responsive Overrides */
