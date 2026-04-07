@@ -117,19 +117,20 @@ app.post('/api/agent-task', async (req, res) => {
         }
 
         // Role-based system prompts
+        const langInstruction = "Always respond in Vietnamese unless the user explicitly asks for English.";
         const rolePrompts = {
-            architect: "You are an Architect Agent. Analyze the codebase architecture, suggest design improvements, file structural changes, and identify patterns. When suggesting file changes, output them in the format:\n[MODIFY filename]\n```\nnew content\n```",
-            developer: "You are a Developer Agent. Implement the requested task by writing or rewriting code. Return the specific modifications in the format:\n[MODIFY filename]\n```\nnew content\n```",
-            reviewer: "You are a Reviewer Agent. Find bugs, code smells, security vulnerabilities, and suggest fixes. When proposing fixes, use the format:\n[MODIFY filename]\n```\nnew content\n```",
-            tester: "You are a QA Tester Agent. Write comprehensive test cases targeting the primary logic. Output test files in the format:\n[NEW filename]\n```\ntest content\n```"
+            architect: `You are an Architect Agent. ${langInstruction} Analyze the codebase architecture, suggest design improvements, file structural changes, and identify patterns. When suggesting file changes, output them in the format:\n[MODIFY filename]\n\`\`\`\nnew content\n\`\`\``,
+            developer: `You are a Developer Agent. ${langInstruction} Implement the requested task by writing or rewriting code. Return the specific modifications in the format:\n[MODIFY filename]\n\`\`\`\nnew content\n\`\`\``,
+            reviewer: `You are a Reviewer Agent. ${langInstruction} Find bugs, code smells, security vulnerabilities, and suggest fixes. When proposing fixes, use the format:\n[MODIFY filename]\n\`\`\`\nnew content\n\`\`\``,
+            tester: `You are a QA Tester Agent. ${langInstruction} Write comprehensive test cases targeting the primary logic. Output test files in the format:\n[NEW filename]\n\`\`\`\ntest content\n\`\`\``
         };
 
         const systemDirectives = rolePrompts[agentRole] || "You are an AI Coding Assistant.";
 
         const finalPrompt = `System Directive: ${systemDirectives}\nTask: ${task}\n\n${contextBlock}\n\nAnalyze and provide your response:`;
 
-        // Use Gemini 2.5 Pro for its massive context window
-        const model = genAI.getGenerativeModel({ model: "gemini-2.5-pro" });
+        // Use Gemini 1.5 Flash for speed and higher quota limits
+        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
         const r = await model.generateContent(finalPrompt);
         const textResponse = (await r.response).text();
 
@@ -155,7 +156,7 @@ app.post('/api/agent-task', async (req, res) => {
             agentRole,
             task,
             timestamp: new Date().toISOString(),
-            model: 'gemini-2.5-pro',
+            model: 'gemini-1.5-flash',
             filesModified: filesModified.map(f => f.filename),
             outputPreview: textResponse.substring(0, 500)
         };
@@ -296,18 +297,25 @@ app.post('/api/arena/chat', async (req, res) => {
     try {
         const [geminiResult, groqModel1, groqModel2] = await Promise.all([
             (async () => {
-                const model = genAI.getGenerativeModel({ model: "gemini-2.5-pro" });
-                const r = await model.generateContent(prompt);
+                const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+                const promptWithLang = `Instruction: Always respond in Vietnamese even if the prompt is in English, unless the user specifically asks for an English response. \n\nUser Prompt: ${prompt}`;
+                const r = await model.generateContent(promptWithLang);
                 return (await r.response).text();
             })().catch(e => `Gemini Error: ${e.message}`),
 
             groq.chat.completions.create({
-                messages: [{ role: 'user', content: prompt }],
+                messages: [
+                    { role: 'system', content: 'Always respond in Vietnamese unless requested otherwise.' },
+                    { role: 'user', content: prompt }
+                ],
                 model: 'meta-llama/llama-4-scout-17b-16e-instruct',
             }).then(r => r.choices[0]?.message?.content || "").catch(e => `Groq Error: ${e.message}`),
 
             groq.chat.completions.create({
-                messages: [{ role: 'user', content: prompt }],
+                messages: [
+                    { role: 'system', content: 'Always respond in Vietnamese unless requested otherwise.' },
+                    { role: 'user', content: prompt }
+                ],
                 model: 'openai/gpt-oss-120b',
             }).then(r => r.choices[0]?.message?.content || "").catch(e => `Groq Error: ${e.message}`)
         ]);
