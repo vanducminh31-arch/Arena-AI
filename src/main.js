@@ -4,11 +4,26 @@ const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3000'
 
 // --- Leaderboard Data ---
 const models = [
-  { id: 1, name: 'DeepSeek R1 70B', accuracy: '96.2%', speed: 120, cost: 'Free', status: 'Live' },
-  { id: 2, name: 'Llama 4 Scout', accuracy: '91.2%', speed: 320, cost: 'Free', status: 'Live' },
-  { id: 3, name: 'GPT-OSS 120B', accuracy: '93.1%', speed: 280, cost: 'Free', status: 'Live' },
-  { id: 4, name: 'Claude 4 Opus', accuracy: '95.0%', speed: 78, cost: '$15.00', status: 'Live' },
-  { id: 5, name: 'Qwen 3 32B', accuracy: '90.5%', speed: 210, cost: 'Free', status: 'Live' },
+  { id: 1, name: 'GPT-4o', accuracy: '98.5%', speed: 105, cost: '$5.00', status: 'Live' },
+  { id: 2, name: 'Claude 3.5 Sonnet', accuracy: '98.2%', speed: 110, cost: '$3.00', status: 'Live' },
+  { id: 3, name: 'DeepSeek R1 70B', accuracy: '97.8%', speed: 120, cost: 'Free', status: 'Live' },
+  { id: 4, name: 'GPT-4 Turbo', accuracy: '97.5%', speed: 90, cost: '$10.00', status: 'Live' },
+  { id: 5, name: 'Claude 3 Opus', accuracy: '96.9%', speed: 78, cost: '$15.00', status: 'Live' },
+  { id: 6, name: 'Gemini 1.5 Pro', accuracy: '96.5%', speed: 130, cost: '$7.00', status: 'Live' },
+  { id: 7, name: 'Llama 3.1 405B', accuracy: '96.0%', speed: 85, cost: 'Free', status: 'Live' },
+  { id: 8, name: 'Mistral Large 2', accuracy: '95.5%', speed: 140, cost: '$4.00', status: 'Live' },
+  { id: 9, name: 'Claude 3.5 Haiku', accuracy: '94.8%', speed: 250, cost: '$0.25', status: 'Live' },
+  { id: 10, name: 'Gemini 1.5 Flash', accuracy: '94.2%', speed: 280, cost: '$0.35', status: 'Live' },
+  { id: 11, name: 'GPT-OSS 120B', accuracy: '93.1%', speed: 280, cost: 'Free', status: 'Live' },
+  { id: 12, name: 'Qwen 2.5 72B', accuracy: '92.7%', speed: 180, cost: 'Free', status: 'Live' },
+  { id: 13, name: 'Llama 4 Scout', accuracy: '91.2%', speed: 320, cost: 'Free', status: 'Live' },
+  { id: 14, name: 'Mistral Nemo', accuracy: '90.8%', speed: 310, cost: 'Free', status: 'Live' },
+  { id: 15, name: 'Qwen 3 32B', accuracy: '90.5%', speed: 210, cost: 'Free', status: 'Live' },
+  { id: 16, name: 'Gemma 2 27B', accuracy: '89.9%', speed: 260, cost: 'Free', status: 'Live' },
+  { id: 17, name: 'Llama 3.1 8B', accuracy: '89.5%', speed: 380, cost: 'Free', status: 'Live' },
+  { id: 18, name: 'Phi-3 Medium', accuracy: '88.2%', speed: 350, cost: 'Free', status: 'Live' },
+  { id: 19, name: 'Command R+', accuracy: '87.5%', speed: 190, cost: '$3.00', status: 'Live' },
+  { id: 20, name: 'Yi-Large', accuracy: '86.8%', speed: 200, cost: '$2.50', status: 'Live' }
 ];
 
 const availableModels = [

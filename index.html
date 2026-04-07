@@ -16,8 +16,8 @@
           <span class="logo-text">ARENA <span style="color:var(--primary-blue)">AI</span></span>
         </div>
         <nav class="sidebar-nav">
-          <a class="nav-item active" data-view="view-overview">
-            <i>⊞</i> <span>Overview</span>
+          <a class="nav-item active" data-view="view-leaderboard">
+            <i>📊</i> <span>Dashboard</span>
           </a>
           <a class="nav-item" data-view="view-arena">
              <i>⚔</i> <span>Arena Battle</span>
@@ -25,9 +25,6 @@
           <!-- <a class="nav-item" data-view="view-codebase">
             <i>⌨</i> <span>Code Intelligence</span>
           </a> -->
-          <a class="nav-item" data-view="view-leaderboard">
-            <i>📊</i> <span>Leaderboard</span>
-          </a>
         </nav>
         <div style="padding: var(--space-4); border-top: 1px solid var(--border-subtle);">
           <div class="nav-item" style="margin-bottom: 0;">
@@ -48,53 +45,6 @@
 
         <div class="container-dashboard">
           
-          <!-- VIEW: OVERVIEW -->
-          <section id="view-overview" class="dashboard-view active">
-            <div style="display: grid; grid-template-columns: 2fr 1fr; gap: var(--space-8);">
-              <div class="card">
-                <div class="card-header">
-                  <h3 class="card-title">Welcome to the Intelligence Arena</h3>
-                </div>
-                <p style="color: var(--text-secondary); margin-bottom: var(--space-6);">
-                  Track the world's most capable AI models in real-time. Benchmark your own codebase or compare model outputs side-by-side using our high-performance infrastructure.
-                </p>
-                <div style="display: flex; gap: var(--space-4);">
-                  <button class="btn btn-primary" onclick="document.querySelector('[data-view=view-arena]').click()">Start Battle</button>
-                  <button class="btn btn-secondary" onclick="document.querySelector('[data-view=view-codebase]').click()">Analyze Code</button>
-                </div>
-              </div>
-              <div class="card">
-                <div class="card-header">
-                  <h3 class="card-title">System Status</h3>
-                </div>
-                <div style="display: flex; flex-direction: column; gap: var(--space-3);">
-                  <div style="display: flex; justify-content: space-between;">
-                    <span style="color: var(--text-secondary)">Railway Backend</span>
-                    <span id="status-railway" style="color: var(--success)">● Online</span>
-                  </div>
-                  <div style="display: flex; justify-content: space-between;">
-                    <span style="color: var(--text-secondary)">Gemini API</span>
-                    <span id="status-gemini" style="color: var(--success)">● Operational</span>
-                  </div>
-                  <div style="display: flex; justify-content: space-between;">
-                    <span style="color: var(--text-secondary)">Groq Engine</span>
-                    <span id="status-groq" style="color: var(--success)">● Active</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div class="card" style="margin-top: var(--space-8);">
-              <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
-                <h3 class="card-title">Latest Leaderboard Rankings</h3>
-                <button class="btn btn-secondary" style="padding: 4px 12px; font-size: 0.8rem;" onclick="document.querySelector('[data-view=view-leaderboard]').click()">View All</button>
-              </div>
-              <div id="overview-leaderboard-preview">
-                <!-- Shortened preview handled via JS -->
-              </div>
-            </div>
-          </section>
-
           <!-- VIEW: ARENA -->
           <section id="view-arena" class="dashboard-view">
             <div class="card">
@@ -180,11 +130,11 @@
             </div>
           </section>
 
-          <!-- VIEW: LEADERBOARD -->
-          <section id="view-leaderboard" class="dashboard-view">
+          <!-- VIEW: LEADERBOARD / DASHBOARD -->
+          <section id="view-leaderboard" class="dashboard-view active">
             <div class="card">
-              <div class="card-header">
-                <h3 class="card-title">Global LLM Performance Rankings</h3>
+              <div class="card-header" style="display:flex; justify-content: space-between;">
+                <h3 class="card-title">Top 20 Global LLM Rankings</h3>
               </div>
               <div style="overflow-x: auto;">
                 <table style="width: 100%; border-collapse: collapse;">
