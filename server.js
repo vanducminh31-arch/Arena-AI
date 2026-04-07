@@ -296,12 +296,14 @@ app.post('/api/arena/chat', async (req, res) => {
 
     try {
         const [geminiResult, groqModel1, groqModel2] = await Promise.all([
-            (async () => {
-                const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-                const promptWithLang = `Instruction: Always respond in Vietnamese even if the prompt is in English, unless the user specifically asks for an English response. \n\nUser Prompt: ${prompt}`;
-                const r = await model.generateContent(promptWithLang);
-                return (await r.response).text();
-            })().catch(e => `Gemini Error: ${e.message}`),
+            // Model 1: DeepSeek Qwen 32B (via Groq)
+            groq.chat.completions.create({
+                messages: [
+                    { role: 'system', content: 'Always respond in Vietnamese unless requested otherwise.' },
+                    { role: 'user', content: prompt }
+                ],
+                model: 'deepseek-r1-distill-qwen-32b',
+            }).then(r => r.choices[0]?.message?.content || "").catch(e => `Groq Error: ${e.message}`),
 
             groq.chat.completions.create({
                 messages: [
