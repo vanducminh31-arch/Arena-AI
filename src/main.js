@@ -11,10 +11,45 @@ const models = [
   { id: 5, name: 'Qwen 3 32B', accuracy: '90.5%', speed: 210, cost: 'Free', status: 'Live' },
 ];
 
+// --- Navigation Logic ---
+function initNavigation() {
+    const navItems = document.querySelectorAll('.nav-item[data-view]');
+    const views = document.querySelectorAll('.dashboard-view');
+    const viewTitle = document.getElementById('view-title');
+    const app = document.getElementById('app');
+    const logoIcon = document.querySelector('.logo-icon');
+
+    navItems.forEach(item => {
+        item.addEventListener('click', () => {
+            const targetView = item.getAttribute('data-view');
+            
+            // Toggle Active Nav
+            navItems.forEach(nav => nav.classList.remove('active'));
+            item.classList.add('active');
+
+            // Toggle Active View
+            views.forEach(view => view.classList.remove('active'));
+            document.getElementById(targetView).classList.add('active');
+
+            // Update Title
+            viewTitle.textContent = item.querySelector('span').textContent;
+            
+            // Mobile auto-collapse sidebar if needed (later)
+        });
+    });
+
+    // Sidebar Collapse Toggle (Click on Logo Icon)
+    if (logoIcon) {
+        logoIcon.addEventListener('click', () => {
+            app.classList.toggle('collapsed');
+        });
+    }
+}
+
 // --- Core Logic ---
 document.addEventListener('DOMContentLoaded', () => {
+    initNavigation();
     initLeaderboard();
-    initScrollAnimations();
     initLiveUpdates();
     initCodebaseAgent();
     initArenaBattle();
@@ -25,31 +60,17 @@ function initLeaderboard() {
     if (!leaderboardBody) return;
 
     leaderboardBody.innerHTML = models.map(model => `
-        <div class="leaderboard-row" id="model-${model.id}">
-            <div class="col model-name">${model.name}</div>
-            <div class="col score-high">${model.accuracy}</div>
-            <div class="col speed-val">${model.speed}</div>
-            <div class="col cost-val">${model.cost}</div>
-            <div class="col"><span class="status-active">${model.status}</span></div>
-        </div>
+        <tr id="model-${model.id}" style="border-bottom: 1px solid var(--border-subtle); transition: var(--transition);">
+            <td style="padding: var(--space-4); font-weight: 600;">${model.name}</td>
+            <td style="padding: var(--space-4); color: var(--success);">${model.accuracy}</td>
+            <td style="padding: var(--space-4);" class="speed-val">${model.speed}</td>
+            <td style="padding: var(--space-4); color: var(--text-secondary);">${model.cost}</td>
+            <td style="padding: var(--space-4);"><span class="status-active">${model.status}</span></td>
+        </tr>
     `).join('');
 }
 
-function initScrollAnimations() {
-    const observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                entry.target.classList.add('active');
-            }
-        });
-    }, { threshold: 0.1 });
-
-    document.querySelectorAll('.content-reveal').forEach(el => observer.observe(el));
-
-    setTimeout(() => {
-        document.querySelector('.hero').classList.add('active');
-    }, 1000);
-}
+// Removed initScrollAnimations as we are using a Dashboard layout now
 
 function initLiveUpdates() {
     setInterval(() => {
@@ -123,10 +144,25 @@ function initCodebaseAgent() {
         if (e.target.files.length) handleUpload(e.target.files);
     });
 
+    // --- Console Logger Helpers ---
+    function logToConsole(message, type = 'info') {
+        const timestamp = new Date().toLocaleTimeString([], { hour12: false });
+        const line = document.createElement('div');
+        line.style.marginBottom = '4px';
+        
+        let color = '#a5b4fc'; // default violet
+        if (type === 'success') color = '#10b981';
+        if (type === 'error') color = '#f43f5e';
+        if (type === 'info') color = '#3b82f6';
+
+        line.innerHTML = `<span style="color: var(--text-muted); font-size: 0.75rem;">[${timestamp}]</span> <span style="color: ${color}">${message}</span>`;
+        agentConsole.appendChild(line);
+        agentConsole.scrollTop = agentConsole.scrollHeight;
+    }
+
     // --- Upload Handler ---
     async function handleUpload(files) {
-        const heading = uploadForm.querySelector('h3');
-        heading.textContent = 'Uploading...';
+        logToConsole('Initiating workspace upload...', 'info');
 
         const formData = new FormData();
         Array.from(files).forEach(f => formData.append('workspace', f));
@@ -143,7 +179,8 @@ function initCodebaseAgent() {
             sessionStatus.style.display = 'block';
             sessionBadge.textContent = '✓ Session: ' + currentSessionId.split('-')[0];
             sessionDetails.textContent = `Loaded ${data.fileCount} files (${(data.totalChars / 1024).toFixed(1)} KB of code)`;
-            heading.textContent = '✓ Upload Complete — Drop more to replace';
+            
+            logToConsole(`Upload successful. Loaded ${data.fileCount} files.`, 'success');
 
             btnRunAgent.disabled = false;
             btnNewSession.style.display = 'inline-flex';
@@ -152,11 +189,9 @@ function initCodebaseAgent() {
             diffSummary.style.display = 'none';
             diffList.innerHTML = '';
             btnExportZip.style.display = 'none';
-            agentConsole.style.color = '#10b981';
-            agentConsole.textContent = 'Awaiting task initialization...';
 
         } catch (err) {
-            heading.textContent = 'Upload failed — try again';
+            logToConsole(`Upload failed: ${err.message}`, 'error');
             alert('Upload error: ' + err.message);
         }
     }
@@ -168,8 +203,8 @@ function initCodebaseAgent() {
 
         btnRunAgent.disabled = true;
         btnRunAgent.textContent = 'Thinking...';
-        agentConsole.style.color = '#10b981';
-        agentConsole.textContent = '⏳ Agent is analyzing your codebase... This may take 10-30 seconds.';
+        logToConsole(`Running Agent (${agentRole.value}): "${task.substring(0, 30)}..."`, 'info');
+        logToConsole('Analyzing codebase context...', 'info');
 
         try {
             const response = await fetch(`${API_BASE}/api/agent-task`, {
@@ -185,8 +220,17 @@ function initCodebaseAgent() {
             if (data.error) throw new Error(data.error);
 
             // Show output
-            agentConsole.style.color = '#10b981';
-            agentConsole.textContent = data.output;
+            logToConsole(`Task complete. Applied architecture updates.`, 'success');
+            // We append the full output to console as well but formatted
+            const outLine = document.createElement('div');
+            outLine.className = 'agent-raw-output';
+            outLine.style.marginTop = '12px';
+            outLine.style.padding = '12px';
+            outLine.style.background = 'rgba(255,255,255,0.03)';
+            outLine.style.borderRadius = '4px';
+            outLine.textContent = data.output;
+            agentConsole.appendChild(outLine);
+            agentConsole.scrollTop = agentConsole.scrollHeight;
 
             // Show diff summary if files were modified
             if (data.filesModified && data.filesModified.length > 0) {
@@ -218,8 +262,7 @@ function initCodebaseAgent() {
             }
 
         } catch (error) {
-            agentConsole.style.color = '#f87171';
-            agentConsole.textContent = '[Agent Error] ' + error.message;
+            logToConsole(`Agent execution failed: ${error.message}`, 'error');
         } finally {
             btnRunAgent.disabled = false;
             btnRunAgent.textContent = 'Run Agent';
