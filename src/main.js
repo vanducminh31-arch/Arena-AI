@@ -4,7 +4,7 @@ const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3000'
 
 // --- Leaderboard Data ---
 const models = [
-  { id: 1, name: 'Gemini 1.5 Flash', accuracy: '94.8%', speed: 145, cost: 'Free', status: 'Live' },
+  { id: 1, name: 'DeepSeek Qwen 32B', accuracy: '94.8%', speed: 145, cost: 'Free', status: 'Live' },
   { id: 2, name: 'Llama 4 Scout', accuracy: '91.2%', speed: 320, cost: 'Free', status: 'Live' },
   { id: 3, name: 'GPT-OSS 120B', accuracy: '93.1%', speed: 280, cost: 'Free', status: 'Live' },
   { id: 4, name: 'Claude 4 Opus', accuracy: '95.0%', speed: 78, cost: '$15.00', status: 'Live' },
