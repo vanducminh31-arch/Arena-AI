@@ -11,6 +11,17 @@ const models = [
   { id: 5, name: 'Qwen 3 32B', accuracy: '90.5%', speed: 210, cost: 'Free', status: 'Live' },
 ];
 
+const availableModels = [
+  { id: 'gemini-1.5-flash', name: 'Gemini 1.5 Flash', provider: 'Google' },
+  { id: 'gemini-1.5-pro', name: 'Gemini 1.5 Pro', provider: 'Google' },
+  { id: 'gemini-2.0-flash-exp', name: 'Gemini 2.0 Flash', provider: 'Google' },
+  { id: 'deepseek-r1-distill-llama-70b', name: 'DeepSeek R1 70B', provider: 'Groq' },
+  { id: 'llama-3.3-70b-versatile', name: 'Llama 3.3 70B', provider: 'Groq' },
+  { id: 'mixtral-8x7b-32768', name: 'Mixtral 8x7B', provider: 'Groq' },
+  { id: 'gemma2-9b-it', name: 'Gemma 2 9B', provider: 'Groq' },
+  { id: 'qwen-2.5-32b', name: 'Qwen 2.5 32B', provider: 'Groq' }
+];
+
 // --- Navigation Logic ---
 function initNavigation() {
     const navItems = document.querySelectorAll('.nav-item[data-view]');
@@ -331,11 +342,26 @@ function initCodebaseAgent() {
 function initArenaBattle() {
     const btnBattle = document.getElementById('btn-battle');
     const inputPrompt = document.getElementById('battle-prompt');
-    const geminiOutput = document.getElementById('gemini-output');
-    const groq1Output = document.getElementById('groq1-output');
-    const groq2Output = document.getElementById('groq2-output');
+    const arenas = document.querySelectorAll('.result-column');
+    const outputs = [
+        document.getElementById('gemini-output'),
+        document.getElementById('groq1-output'),
+        document.getElementById('groq2-output')
+    ];
 
     if (!btnBattle) return;
+
+    // Populate dropdowns
+    const dropdowns = document.querySelectorAll('.model-selector');
+    dropdowns.forEach((dd, idx) => {
+        dd.innerHTML = availableModels.map(m => `
+            <option value="${m.id}" ${idx === 0 && m.id === 'gemini-1.5-flash' ? 'selected' : ''} 
+                    ${idx === 1 && m.id === 'deepseek-r1-distill-llama-70b' ? 'selected' : ''}
+                    ${idx === 2 && m.id === 'llama-3.3-70b-versatile' ? 'selected' : ''}>
+                ${m.name}
+            </option>
+        `).join('');
+    });
 
     btnBattle.addEventListener('click', async () => {
         const prompt = inputPrompt.value.trim();
@@ -345,32 +371,32 @@ function initArenaBattle() {
         btnBattle.disabled = true;
         btnBattle.textContent = 'Battling...';
 
-        geminiOutput.innerHTML = loadingHtml;
-        groq1Output.innerHTML = loadingHtml;
-        groq2Output.innerHTML = loadingHtml;
+        outputs.forEach(out => out.innerHTML = loadingHtml);
+
+        // Get selected models
+        const selectedModels = Array.from(dropdowns).map(dd => dd.value);
 
         try {
             const response = await fetch(`${API_BASE}/api/arena/chat`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ prompt })
+                body: JSON.stringify({ prompt, models: selectedModels })
             });
             const data = await response.json();
             if (data.error) throw new Error(data.error);
 
-            geminiOutput.textContent = data.gemini;
-            groq1Output.textContent = data.groq1;
-            groq2Output.textContent = data.groq2;
+            // Populate outputs mapped by results
+            data.results.forEach((res, i) => {
+                outputs[i].textContent = res.output;
+                outputs[i].style.color = res.output.startsWith('Error') ? '#f43f5e' : '';
+            });
 
         } catch (error) {
             const errText = 'Error: ' + error.message;
-            geminiOutput.textContent = errText;
-            groq1Output.textContent = errText;
-            groq2Output.textContent = errText;
-
-            geminiOutput.style.color = '#f87171';
-            groq1Output.style.color = '#f87171';
-            groq2Output.style.color = '#f87171';
+            outputs.forEach(out => {
+                out.textContent = errText;
+                out.style.color = '#f87171';
+            });
         } finally {
             btnBattle.disabled = false;
             btnBattle.textContent = 'Send Prompt';

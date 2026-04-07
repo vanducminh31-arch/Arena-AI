@@ -109,19 +109,25 @@
               </div>
 
               <div class="arena-grid">
-                <!-- Gemini -->
+                <!-- Arena 1 -->
                 <div class="result-column">
-                  <div class="model-badge">DeepSeek R1 70B</div>
+                  <header style="margin-bottom: var(--space-3);">
+                    <select class="model-selector glass-input" style="padding: 4px 8px; font-size: 0.75rem; width: auto; background: var(--primary-gradient); border: none; font-weight: 700; text-transform: uppercase; cursor: pointer;"></select>
+                  </header>
                   <div id="gemini-output" style="color: var(--text-secondary); font-size: 0.9rem; white-space: pre-wrap;">Awaiting input...</div>
                 </div>
-                <!-- Llama -->
+                <!-- Arena 2 -->
                 <div class="result-column">
-                  <div class="model-badge" style="background: #ef4444">Llama 4 Scout</div>
+                  <header style="margin-bottom: var(--space-3);">
+                    <select class="model-selector glass-input" style="padding: 4px 8px; font-size: 0.75rem; width: auto; background: #ef4444; border: none; font-weight: 700; text-transform: uppercase; cursor: pointer;"></select>
+                  </header>
                   <div id="groq1-output" style="color: var(--text-secondary); font-size: 0.9rem; white-space: pre-wrap;">Awaiting input...</div>
                 </div>
-                <!-- OSS -->
+                <!-- Arena 3 -->
                 <div class="result-column">
-                  <div class="model-badge" style="background: #10b981">GPT OSS 120B</div>
+                  <header style="margin-bottom: var(--space-3);">
+                    <select class="model-selector glass-input" style="padding: 4px 8px; font-size: 0.75rem; width: auto; background: #10b981; border: none; font-weight: 700; text-transform: uppercase; cursor: pointer;"></select>
+                  </header>
                   <div id="groq2-output" style="color: var(--text-secondary); font-size: 0.9rem; white-space: pre-wrap;">Awaiting input...</div>
                 </div>
               </div>

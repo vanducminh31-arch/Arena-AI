@@ -287,44 +287,48 @@ app.get('/api/session/:sessionId', (req, res) => {
     });
 });
 
-/* =========================================
-   ARENA BATTLE (Original)
-========================================= */
 app.post('/api/arena/chat', async (req, res) => {
-    const { prompt } = req.body;
+    const { prompt, models: selectedModels } = req.body;
     if (!prompt) return res.status(400).json({ error: 'Prompt is required' });
+    if (!selectedModels || !Array.from(selectedModels).length) {
+        return res.status(400).json({ error: 'Selection of at least one model is required' });
+    }
 
     try {
-        const [geminiResult, groqModel1, groqModel2] = await Promise.all([
-            // Model 1: DeepSeek Qwen 32B (via Groq)
-            groq.chat.completions.create({
-                messages: [
-                    { role: 'system', content: 'Always respond in Vietnamese unless requested otherwise.' },
-                    { role: 'user', content: prompt }
-                ],
-                model: 'deepseek-r1-distill-llama-70b',
-            }).then(r => r.choices[0]?.message?.content || "").catch(e => `Groq Error: ${e.message}`),
+        const results = await Promise.all(selectedModels.map(async (modelId) => {
+            try {
+                // Determine Provider
+                if (modelId.startsWith('gemini-')) {
+                    const model = genAI.getGenerativeModel({ model: modelId });
+                    const promptWithLang = `Instruction: Always respond in Vietnamese even if the prompt is in English, unless the user specifically asks for an English response. \n\nUser Prompt: ${prompt}`;
+                    const r = await model.generateContent(promptWithLang);
+                    return (await r.response).text();
+                } else {
+                    // Default to Groq for other IDs
+                    const response = await groq.chat.completions.create({
+                        messages: [
+                            { role: 'system', content: 'Always respond in Vietnamese unless requested otherwise. Use clear formatting.' },
+                            { role: 'user', content: prompt }
+                        ],
+                        model: modelId,
+                    });
+                    return response.choices[0]?.message?.content || "No response from model.";
+                }
+            } catch (err) {
+                console.error(`Error with model ${modelId}:`, err);
+                return `Error [${modelId}]: ${err.message}`;
+            }
+        }));
 
-            groq.chat.completions.create({
-                messages: [
-                    { role: 'system', content: 'Always respond in Vietnamese unless requested otherwise.' },
-                    { role: 'user', content: prompt }
-                ],
-                model: 'meta-llama/llama-4-scout-17b-16e-instruct',
-            }).then(r => r.choices[0]?.message?.content || "").catch(e => `Groq Error: ${e.message}`),
-
-            groq.chat.completions.create({
-                messages: [
-                    { role: 'system', content: 'Always respond in Vietnamese unless requested otherwise.' },
-                    { role: 'user', content: prompt }
-                ],
-                model: 'openai/gpt-oss-120b',
-            }).then(r => r.choices[0]?.message?.content || "").catch(e => `Groq Error: ${e.message}`)
-        ]);
-
-        res.json({ gemini: geminiResult, groq1: groqModel1, groq2: groqModel2 });
+        res.json({ 
+            results: results.map((text, index) => ({
+                modelId: selectedModels[index],
+                output: text
+            }))
+        });
 
     } catch (error) {
+        console.error("Arena Chat Error:", error);
         res.status(500).json({ error: 'Failed to fetch AI responses' });
     }
 });
