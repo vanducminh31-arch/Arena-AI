@@ -302,7 +302,7 @@ app.post('/api/arena/chat', async (req, res) => {
                     { role: 'system', content: 'Always respond in Vietnamese unless requested otherwise.' },
                     { role: 'user', content: prompt }
                 ],
-                model: 'deepseek-r1-distill-qwen-32b',
+                model: 'deepseek-r1-distill-llama-70b',
             }).then(r => r.choices[0]?.message?.content || "").catch(e => `Groq Error: ${e.message}`),
 
             groq.chat.completions.create({
