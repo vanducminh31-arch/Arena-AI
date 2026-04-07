@@ -1,0 +1,13 @@
+name: Railway Keep-Alive
+
+on:
+  schedule:
+    - cron: '*/25 * * * *' # Run every 25 minutes
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Ping backend health endpoint
+      run: |
+        curl -f "${{ secrets.RAILWAY_BACKEND_URL }}/api/health" || exit 1

@@ -14,12 +14,10 @@ const models = [
 const availableModels = [
   { id: 'openai/gpt-oss-120b', name: 'GPT OSS 120B', color: 'var(--primary-gradient)' },
   { id: 'openai/gpt-oss-20b', name: 'GPT OSS 20B', color: '#8b5cf6' },
-  { id: 'qwen-3-32b', name: 'Qwen 3 32B', color: '#ec4899' },
+  { id: 'qwen/qwen3-32b', name: 'Qwen 3 32B', color: '#ec4899' },
   { id: 'meta-llama/llama-4-scout-17b-16e-instruct', name: 'Llama 4 Scout', color: '#ef4444' },
-  { id: 'deepseek-r1-distill-llama-70b', name: 'DeepSeek R1 70B', color: '#3b82f6' },
-  { id: 'llama-3.3-70b-versatile', name: 'Llama 3.3 70B', color: '#10b981' },
-  { id: 'mixtral-8x7b-32768', name: 'Mixtral 8x7B', color: '#f59e0b' },
-  { id: 'qwen-2.5-32b', name: 'Qwen 2.5 32B', color: '#06b6d4' }
+  { id: 'llama-3.3-70b-versatile', name: 'Llama 3.3 70B', color: '#3b82f6' },
+  { id: 'llama-3.1-8b-instant', name: 'Llama 3.1 8B', color: '#10b981' }
 ];
 
 // --- Navigation Logic ---
@@ -64,7 +62,44 @@ document.addEventListener('DOMContentLoaded', () => {
     initLiveUpdates();
     initCodebaseAgent();
     initArenaBattle();
+    initStatusPolling();
 });
+
+function initStatusPolling() {
+    const poll = async () => {
+        try {
+            const res = await fetch(`${API_BASE}/api/health`);
+            const data = await res.json();
+            
+            updateStatusDot('railway', 'ok'); // Backend is responding if we get here
+            updateStatusDot('gemini', data.providers.gemini);
+            updateStatusDot('groq', data.providers.groq);
+        } catch (e) {
+            updateStatusDot('railway', 'down');
+            updateStatusDot('gemini', 'down');
+            updateStatusDot('groq', 'down');
+        }
+    };
+
+    function updateStatusDot(id, status) {
+        const el = document.getElementById(`status-${id}`);
+        if (!el) return;
+
+        if (status === 'ok') {
+            el.textContent = '● Operational';
+            el.style.color = 'var(--success)';
+        } else if (status === 'degraded') {
+            el.textContent = '● Degraded';
+            el.style.color = '#fbbf24'; // Orange/Yellow
+        } else {
+            el.textContent = '● Offline';
+            el.style.color = 'var(--error)';
+        }
+    }
+
+    poll();
+    setInterval(poll, 30000);
+}
 
 function initLeaderboard() {
     const leaderboardBody = document.getElementById('leaderboard-body');
@@ -101,9 +136,10 @@ function initLiveUpdates() {
     }, 2000);
 }
 
-// Navbar scroll effect
+// Navbar scroll effect (legacy - dashboard uses sidebar now)
 window.addEventListener('scroll', () => {
     const navbar = document.querySelector('.navbar');
+    if (!navbar) return;
     if (window.scrollY > 50) {
         navbar.style.background = 'rgba(5, 5, 5, 0.8)';
         navbar.style.backdropFilter = 'blur(12px)';
@@ -368,63 +404,87 @@ function initArenaBattle() {
         if (!prompt) return;
 
         btnBattle.disabled = true;
-        btnBattle.textContent = 'Invoking Multi-AI...';
+        btnBattle.textContent = 'Streaming Battle...';
 
         const boxes = document.querySelectorAll('.arena-box');
         boxes.forEach(box => {
             const output = box.querySelector('.arena-output-container');
             const status = box.querySelector('.status-indicator');
-            output.innerHTML = '<div class="typing-indicator"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div>';
-            status.textContent = 'Thinking...';
-            status.style.color = 'var(--accent-color)';
+            box.classList.add('loading');
+            output.innerHTML = `
+                <div class="skeleton" style="width: 90%"></div>
+                <div class="skeleton" style="width: 70%"></div>
+                <div class="skeleton" style="width: 85%"></div>
+                <div class="skeleton" style="width: 40%"></div>
+            `;
+            status.textContent = 'Connecting...';
+            status.style.color = 'var(--text-muted)';
         });
 
-        // Get all model IDs
         const selectedModels = availableModels.map(m => m.id);
 
         try {
-            const response = await fetch(`${API_BASE}/api/arena/chat`, {
+            const response = await fetch(`${API_BASE}/api/battle`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ prompt, models: selectedModels })
             });
 
-            const data = await response.json();
-            if (data.error) throw new Error(data.error);
+            if (!response.ok) throw new Error('Stream request failed');
 
-            // Populate each output box based on API response
-            data.results.forEach((res) => {
-                const safeId = res.modelId.replace(/[\/\.]/g, '-');
-                const outputEl = document.getElementById(`output-${safeId}`);
-                const boxEl = outputEl?.parentElement;
-                const statusEl = boxEl?.querySelector('.status-indicator');
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder();
+            let buffer = '';
 
-                if (outputEl) {
-                    if (res.output.startsWith('Error')) {
-                        outputEl.textContent = res.output;
-                        outputEl.style.color = '#f43f5e';
-                        if (statusEl) {
-                            statusEl.textContent = 'Failed';
-                            statusEl.style.color = '#f43f5e';
-                        }
-                    } else {
-                        outputEl.textContent = res.output;
-                        outputEl.style.color = 'var(--text-primary)';
-                        if (statusEl) {
-                            statusEl.textContent = 'Ready';
-                            statusEl.style.color = '#10b981';
+            while (true) {
+                const { value, done: readerDone } = await reader.read();
+                if (readerDone) break;
+
+                buffer += decoder.decode(value, { stream: true });
+                const lines = buffer.split('\n');
+                buffer = lines.pop(); // Keep partial line in buffer
+
+                for (const line of lines) {
+                    if (line.startsWith('data: ')) {
+                        const data = JSON.parse(line.substring(6));
+                        const safeId = data.modelId.replace(/[\/\.]/g, '-');
+                        const outputEl = document.getElementById(`output-${safeId}`);
+                        const boxEl = outputEl?.parentElement;
+                        const statusEl = boxEl?.querySelector('.status-indicator');
+
+                        if (!outputEl) continue;
+
+                        if (data.done) {
+                            if (boxEl) boxEl.classList.remove('loading');
+                            if (statusEl) {
+                                statusEl.textContent = `${data.latencyMs}ms | ${data.tokensPerSec}t/s`;
+                                statusEl.style.color = '#10b981';
+                            }
+                        } else {
+                            if (statusEl && statusEl.textContent !== 'Streaming...') {
+                                statusEl.textContent = 'Streaming...';
+                                statusEl.style.color = 'var(--primary-blue)';
+                            }
+
+                            if (boxEl && boxEl.classList.contains('loading')) {
+                                boxEl.classList.remove('loading');
+                                outputEl.innerHTML = ''; // Clear skeleton
+                            }
+
+                            // Append token
+                            const tokenSpan = document.createElement('span');
+                            tokenSpan.textContent = data.delta;
+                            outputEl.appendChild(tokenSpan);
+                            outputEl.scrollTop = outputEl.scrollHeight;
                         }
                     }
                 }
-            });
+            }
 
         } catch (error) {
             console.error("Battle Error:", error);
             boxes.forEach(box => {
-                const output = box.querySelector('.arena-output-container');
                 const status = box.querySelector('.status-indicator');
-                output.textContent = 'Critical Error: ' + error.message;
-                output.style.color = '#f43f5e';
                 status.textContent = 'Error';
                 status.style.color = '#f43f5e';
             });
