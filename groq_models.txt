@@ -1,0 +1,3 @@
+◇ injected env (2) from .env // tip: ⌘ enable debugging { debug: true }
+Checking Groq Models...
+Groq Models: llama-3.3-70b-versatile, groq/compound-mini, openai/gpt-oss-20b, moonshotai/kimi-k2-instruct-0905, whisper-large-v3, meta-llama/llama-prompt-guard-2-22m, openai/gpt-oss-120b, moonshotai/kimi-k2-instruct, llama-3.1-8b-instant, openai/gpt-oss-safeguard-20b, qwen/qwen3-32b, canopylabs/orpheus-v1-english, allam-2-7b, meta-llama/llama-4-scout-17b-16e-instruct, meta-llama/llama-prompt-guard-2-86m, groq/compound, canopylabs/orpheus-arabic-saudi, whisper-large-v3-turbo

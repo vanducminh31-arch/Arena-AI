@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Arena AI | Elite Model Benchmarking</title>
+    <meta name="description" content="The ultimate platform for AI model performance analysis and benchmarking. Experience the arena of intelligence.">
+    <!-- Google Fonts: Inter & Outfit -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  </head>
+  <body>
+    <div id="app">
+      <!-- Grid Background Overlay -->
+      <div class="grid-overlay"></div>
+      
+      <!-- Navigation -->
+      <nav class="navbar glass">
+        <div class="container container-nav">
+          <div class="logo">
+            <span class="logo-text">ARENA <span class="accent">AI</span></span>
+          </div>
+          <ul class="nav-links">
+            <li><a href="#leaderboard">Leaderboard</a></li>
+            <li><a href="#features">Features</a></li>
+            <li><a href="#models">Models</a></li>
+          </ul>
+          <div class="nav-actions">
+            <button class="btn btn-secondary">Login</button>
+            <button class="btn btn-primary">Join Arena</button>
+          </div>
+        </div>
+      </nav>
+
+      <main>
+        <!-- Hero Section -->
+        <section class="hero content-reveal">
+          <div class="container">
+            <div class="hero-content">
+              <div class="badge neon-glow">New: Gemini 1.5 Pro support</div>
+              <h1>The Arena of <span class="gradient-text">Intelligence</span></h1>
+              <p class="lead text-muted">
+                Benchmark, compare, and deploy the world's most powerful AI models in a high-performance, real-time environment.
+              </p>
+              <div class="hero-cta">
+                <button class="btn btn-primary btn-lg">Explore Leaderboard</button>
+                <button class="btn btn-outline btn-lg">View Documentation</button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Leaderboard Preview Section -->
+        <section id="leaderboard" class="leaderboard content-reveal">
+          <div class="container">
+            <div class="section-header">
+              <h2>Global <span class="gradient-text">Leaderboard</span></h2>
+              <p class="text-muted">Real-time performance metrics across top LLMs</p>
+            </div>
+            
+            <div class="glass leaderboard-card">
+              <div class="leaderboard-table-header">
+                <div class="col">Model</div>
+                <div class="col">Accuracy</div>
+                <div class="col">Speed (t/s)</div>
+                <div class="col">Cost / 1M</div>
+                <div class="col">Status</div>
+              </div>
+              <div id="leaderboard-body" class="leaderboard-body">
+                <!-- Data will be injected here by main.js -->
+                <div class="loading">Loading live arena data...</div>
+              </div>
+            </div>
+          </div>
+        </section>
+        <!-- Codebase Upload & Agent Section -->
+        <section id="codebase-analysis" class="codebase-analysis content-reveal" style="margin-bottom: 4rem;">
+          <div class="container">
+            <div class="section-header">
+              <h2>Codebase <span class="gradient-text">Intelligence</span></h2>
+              <p class="text-muted">Upload your workspace (.zip or multiple files) to let AI agents analyze and build on top of it.</p>
+            </div>
+            
+            <div class="glass upload-card" style="padding: 2rem; border-radius: 16px; margin-bottom: 2rem;">
+              <form id="upload-form" class="upload-zone" style="border: 2px dashed var(--accent-cyan); padding: 3rem; text-align: center; border-radius: 12px; cursor: pointer; transition: all 0.3s ease;">
+                <h3 style="margin-bottom: 1rem;">Drag & Drop files or .zip here</h3>
+                <p class="text-muted">Supported text extensions (.js, .py, .html, .css...)</p>
+                <input type="file" id="file-input" name="workspace" multiple accept=".zip, .js, .ts, .html, .css, .json, .md, .py, .java" style="display: none;" />
+                <button type="button" class="btn btn-outline" style="margin-top: 1rem;" onclick="document.getElementById('file-input').click()">Browse Files</button>
+              </form>
+              
+              <!-- Session Status -->
+              <div id="session-status" style="margin-top: 1rem; display: none;">
+                <div class="badge neon-glow" style="margin-bottom: 0.5rem;" id="session-badge">Session Ready</div>
+                <p class="text-muted" id="session-details">Loaded 0 files (0 chars).</p>
+              </div>
+            </div>
+
+            <!-- Agent Task Input -->
+            <div class="glass task-card" style="padding: 2rem; border-radius: 16px;">
+              <h3 style="margin-bottom: 1rem;">Assign Task to Agent</h3>
+              <div style="display: flex; gap: 1rem; margin-bottom: 1rem;">
+                <select id="agent-role" class="glass-input" style="flex: 1; padding: 0.8rem; background: rgba(0,0,0,0.3); color: white; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px;">
+                  <option value="architect">Agent Architect (Design & Structure)</option>
+                  <option value="developer" selected>Agent Developer (Implement Code)</option>
+                  <option value="reviewer">Agent Reviewer (Bugs & Code Smells)</option>
+                  <option value="tester">Agent Tester (Write Test Cases)</option>
+                </select>
+                <button id="btn-run-agent" class="btn btn-primary" disabled>Run Agent</button>
+              </div>
+              <textarea id="agent-task-input" class="glass-input" rows="4" style="width: 100%; padding: 1rem; background: rgba(0,0,0,0.3); color: white; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px;" placeholder="Describe what you want the agent to do with this codebase..."></textarea>
+              
+              <!-- Agent Output Console -->
+              <div style="margin-top: 1.5rem;">
+                <h4 style="margin-bottom: 0.5rem; color: var(--accent-cyan);">Agent Console</h4>
+                <div id="agent-console" class="glass-input" style="width: 100%; min-height: 200px; max-height: 500px; padding: 1rem; background: #0d0d0d; color: #10b981; font-family: monospace; border: 1px solid rgba(16,185,129,0.3); border-radius: 8px; white-space: pre-wrap; overflow-y: auto;">Awaiting task initialization...</div>
+              </div>
+
+              <!-- Diff Summary (hidden until agent runs) -->
+              <div id="diff-summary" style="margin-top: 1.5rem; display: none;">
+                <h4 style="margin-bottom: 0.5rem;">Files Modified</h4>
+                <div id="diff-list" style="display: flex; flex-direction: column; gap: 0.5rem;"></div>
+              </div>
+
+              <!-- Action Buttons -->
+              <div style="margin-top: 1.5rem; display: flex; gap: 1rem; flex-wrap: wrap;">
+                <button id="btn-export-zip" class="btn btn-outline" style="border-color: #10b981; color: #10b981; display: none;">
+                  ⬇ Export ZIP
+                </button>
+                <button id="btn-new-session" class="btn btn-outline" style="border-color: #f87171; color: #f87171; display: none;">
+                  ✕ New Session
+                </button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Arena Battle Section -->
+        <section id="arena-battle" class="arena-battle content-reveal">
+          <div class="container">
+            <div class="section-header">
+              <h2>Arena <span class="gradient-text">Battle</span></h2>
+              <p class="text-muted">Test multi-model prompts in real-time (Powered by Google Gemini 2.5 Pro & Groq)</p>
+            </div>
+            
+            <div class="glass battle-card">
+              <div class="battle-input-group">
+                <input type="text" id="battle-prompt" class="battle-input" placeholder="Enter your prompt to benchmark across models..." autocomplete="off" />
+                <button id="btn-battle" class="btn btn-primary">Send Prompt</button>
+              </div>
+
+              <div class="battle-results">
+                <!-- Gemini Column -->
+                <div class="result-column glass">
+                  <div class="col-header">
+                    <span class="model-badge">Gemini 2.5 Pro</span>
+                  </div>
+                  <div id="gemini-output" class="output-content text-muted">
+                    Waiting for input...
+                  </div>
+                </div>
+                
+                <!-- Llama 4 Column (Groq) -->
+                <div class="result-column glass">
+                  <div class="col-header">
+                    <span class="model-badge claude-badge">Llama 4 Scout (Groq)</span>
+                  </div>
+                  <div id="groq1-output" class="output-content text-muted">
+                    Waiting for input...
+                  </div>
+                </div>
+
+                <!-- GPT OSS Column (Groq) -->
+                <div class="result-column glass">
+                  <div class="col-header">
+                    <span class="model-badge gpt-badge">GPT OSS 120B (Groq)</span>
+                  </div>
+                  <div id="groq2-output" class="output-content text-muted">
+                    Waiting for input...
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <footer class="glass-top">
+        <div class="container">
+          <div class="footer-bottom">
+            <p>&copy; 2026 Arena AI. Built for the next generation of artificial intelligence.</p>
+          </div>
+        </div>
+      </footer>
+    </div>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
