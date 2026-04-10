@@ -92,10 +92,4 @@ router.post('/', async (req, res, next) => {
     res.end();
 });
 
-// Legacy JSON endpoint (still useful for non-streaming clients)
-router.post('/classic', async (req, res, next) => {
-    // ... existing non-stream logic ...
-    res.status(501).json({ error: "Deprecated. Use /api/battle with streaming." });
-});
-
 export default router;

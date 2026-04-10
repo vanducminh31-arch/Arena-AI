@@ -16,7 +16,6 @@ export const callGroq = async (prompt, options = {}) => {
     try {
         const response = await groq.chat.completions.create({
             messages: [
-                { role: 'system', content: 'Always respond in Vietnamese unless requested otherwise. Use clear formatting.' },
                 { role: 'user', content: prompt }
             ],
             model,
