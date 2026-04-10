@@ -22,6 +22,9 @@
           <a class="nav-item" data-view="view-arena">
              <i>⚔</i> <span>Arena Battle</span>
           </a>
+          <a class="nav-item" data-view="view-workflow">
+             <i>🤝</i> <span>AI Consensus</span>
+          </a>
           <!-- <a class="nav-item" data-view="view-codebase">
             <i>⌨</i> <span>Code Intelligence</span>
           </a> -->
@@ -62,6 +65,73 @@
               <div id="arena-dynamic-grid" class="arena-grid">
                 <!-- Boxes generated via JavaScript -->
               </div>
+            </div>
+          </section>
+
+          <!-- VIEW: WORKFLOW CONSENSUS -->
+          <section id="view-workflow" class="dashboard-view">
+            <div class="card" style="margin-bottom: var(--space-8);">
+              <div class="card-header">
+                <h3 class="card-title">Multi-Agent AI Orchestrator</h3>
+                <p style="color: var(--text-secondary); font-size: 0.9rem;">Multiple AI agents interact to deliver the most accurate answer. Choose a mode or let the system decide.</p>
+              </div>
+              
+              <!-- Mode Selector -->
+              <div class="mode-selector" style="display: flex; gap: var(--space-2); margin-bottom: var(--space-4);">
+                <button class="mode-btn active" data-mode="auto" id="mode-auto">
+                  <span class="mode-icon">🧠</span>
+                  <span class="mode-label">Auto</span>
+                  <span class="mode-desc">AI decides</span>
+                </button>
+                <button class="mode-btn" data-mode="fast" id="mode-fast">
+                  <span class="mode-icon">⚡</span>
+                  <span class="mode-label">Fast</span>
+                  <span class="mode-desc">&lt;300ms</span>
+                </button>
+                <button class="mode-btn" data-mode="balanced" id="mode-balanced">
+                  <span class="mode-icon">⚖️</span>
+                  <span class="mode-label">Balanced</span>
+                  <span class="mode-desc">2 AI + Judge</span>
+                </button>
+                <button class="mode-btn" data-mode="smart" id="mode-smart">
+                  <span class="mode-icon">🧪</span>
+                  <span class="mode-label">Smart</span>
+                  <span class="mode-desc">3-step chain</span>
+                </button>
+              </div>
+
+              <!-- Input Row -->
+              <div style="display: flex; gap: var(--space-3); margin-bottom: var(--space-6);">
+                <input type="text" id="workflow-prompt" class="glass-input" placeholder="Enter your question for the AI agents..." />
+                <button id="btn-workflow" class="btn btn-primary" style="white-space: nowrap;">Start Orchestration</button>
+              </div>
+
+              <!-- Pipeline Status Bar -->
+              <div id="pipeline-status" class="pipeline-status" style="display: none;">
+                <div class="pipeline-step" id="ps-security">
+                  <span class="ps-icon">🛡️</span><span class="ps-label">Security</span><span class="ps-state">—</span>
+                </div>
+                <div class="pipeline-connector"></div>
+                <div class="pipeline-step" id="ps-routing">
+                  <span class="ps-icon">🧭</span><span class="ps-label">Router</span><span class="ps-state">—</span>
+                </div>
+                <div class="pipeline-connector"></div>
+                <div class="pipeline-step" id="ps-execution">
+                  <span class="ps-icon">⚙️</span><span class="ps-label">Execution</span><span class="ps-state">—</span>
+                </div>
+                <div class="pipeline-connector"></div>
+                <div class="pipeline-step" id="ps-output">
+                  <span class="ps-icon">✅</span><span class="ps-label">Output</span><span class="ps-state">—</span>
+                </div>
+              </div>
+
+              <!-- Dynamic Output Area (JS will populate based on mode) -->
+              <div id="workflow-output-area" class="workflow-output-area">
+                <!-- Populated by JavaScript -->
+              </div>
+
+              <!-- Pipeline Summary -->
+              <div id="pipeline-summary" class="pipeline-summary-bar" style="display: none;"></div>
             </div>
           </section>
 

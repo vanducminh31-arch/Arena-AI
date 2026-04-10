@@ -77,6 +77,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initLiveUpdates();
     initCodebaseAgent();
     initArenaBattle();
+    initWorkflowBattle();
     initStatusPolling();
 });
 
@@ -513,3 +514,259 @@ function initArenaBattle() {
         if (e.key === 'Enter') btnBattle.click();
     });
 }
+
+/* =========================================
+   MULTI-AGENT AI ORCHESTRATOR
+========================================= */
+function initWorkflowBattle() {
+    const btnWorkflow = document.getElementById('btn-workflow');
+    const inputPrompt = document.getElementById('workflow-prompt');
+    const outputArea = document.getElementById('workflow-output-area');
+    const pipelineStatus = document.getElementById('pipeline-status');
+    const pipelineSummary = document.getElementById('pipeline-summary');
+    const modeBtns = document.querySelectorAll('.mode-btn');
+
+    if (!btnWorkflow) return;
+
+    let selectedMode = 'auto';
+
+    // --- Mode Selector Logic ---
+    modeBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            modeBtns.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            selectedMode = btn.dataset.mode;
+        });
+    });
+
+    // --- Pipeline Status Helpers ---
+    function setPipelineStep(stepId, state, detail = '') {
+        const el = document.getElementById(stepId);
+        if (!el) return;
+        el.className = 'pipeline-step ' + state; // active | done | error
+        const stateEl = el.querySelector('.ps-state');
+        if (stateEl) stateEl.textContent = detail || (state === 'active' ? '...' : state === 'done' ? '✓' : '✗');
+    }
+
+    // --- Dynamic Panel Builder ---
+    function createPanel(id, title, badgeColor, modelName = '') {
+        return `
+            <div class="workflow-panel" id="panel-${id}">
+                <div class="workflow-panel-header">
+                    <span class="model-badge" style="background: ${badgeColor}">${title}</span>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span class="panel-model-name" id="model-name-${id}">${modelName}</span>
+                        <span class="status-indicator" id="status-${id}">Idle</span>
+                    </div>
+                </div>
+                <div class="workflow-panel-body" id="output-${id}">
+                    <p class="placeholder-text">Waiting...</p>
+                </div>
+            </div>
+        `;
+    }
+
+    function buildLayout(mode) {
+        outputArea.innerHTML = '';
+        outputArea.className = 'workflow-output-area';
+
+        if (mode === 'fast') {
+            outputArea.classList.add('layout-single');
+            outputArea.innerHTML = createPanel('answering', '⚡ Direct Answer', '#10b981; color: #000');
+        } else if (mode === 'balanced') {
+            outputArea.classList.add('layout-balanced');
+            outputArea.innerHTML =
+                createPanel('parallel-a', '🔬 Response A', '#ec4899') +
+                createPanel('parallel-b', '🔭 Response B', '#ef4444') +
+                createPanel('judging', '⚖️ Judge Verdict', '#f59e0b; color: #000', '');
+            // Make judge panel span full width
+            document.getElementById('panel-judging')?.classList.add('judge-panel');
+        } else { // smart
+            outputArea.classList.add('layout-smart');
+            outputArea.innerHTML =
+                createPanel('drafting', 'Step 1: Draft', 'var(--primary-gradient)') +
+                createPanel('reviewing', 'Step 2: Review', '#06b6d4') +
+                createPanel('synthesizing', 'Step 3: Synthesize', '#10b981; color: #000');
+        }
+    }
+
+    // --- Append Text to Panel ---
+    function appendToPanel(panelId, text) {
+        const el = document.getElementById(`output-${panelId}`);
+        if (!el) return;
+        // Clear placeholder on first write
+        if (el.querySelector('.placeholder-text')) el.innerHTML = '';
+        const span = document.createElement('span');
+        span.textContent = text;
+        el.appendChild(span);
+        el.scrollTop = el.scrollHeight;
+    }
+
+    function setStatus(panelId, text, color) {
+        const el = document.getElementById(`status-${panelId}`);
+        if (!el) return;
+        el.textContent = text;
+        el.style.color = color;
+    }
+
+    function setModelName(panelId, name) {
+        const el = document.getElementById(`model-name-${panelId}`);
+        if (el) el.textContent = name;
+    }
+
+    function setActivePanel(panelId) {
+        document.querySelectorAll('.workflow-panel').forEach(p => p.classList.remove('active-step'));
+        const panel = document.getElementById(`panel-${panelId}`);
+        if (panel) panel.classList.add('active-step');
+    }
+
+    function completePanel(panelId) {
+        const panel = document.getElementById(`panel-${panelId}`);
+        if (panel) {
+            panel.classList.remove('active-step');
+            panel.classList.add('completed');
+        }
+    }
+
+    // --- Main Execution ---
+    btnWorkflow.addEventListener('click', async () => {
+        const prompt = inputPrompt.value.trim();
+        if (!prompt) return;
+
+        btnWorkflow.disabled = true;
+        btnWorkflow.textContent = 'Orchestrating...';
+        pipelineStatus.style.display = 'flex';
+        pipelineSummary.style.display = 'none';
+        pipelineSummary.innerHTML = '';
+
+        // Reset all pipeline steps
+        ['ps-security', 'ps-routing', 'ps-execution', 'ps-output'].forEach(id => setPipelineStep(id, '', '—'));
+
+        // We'll build layout once we know the mode
+        let resolvedMode = selectedMode;
+        if (resolvedMode !== 'auto') {
+            buildLayout(resolvedMode);
+        }
+
+        try {
+            const response = await fetch(`${API_BASE}/api/workflow`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ prompt, mode: selectedMode })
+            });
+
+            if (!response.ok) throw new Error('Orchestration request failed');
+
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder();
+            let buffer = '';
+
+            while (true) {
+                const { value, done: readerDone } = await reader.read();
+                if (readerDone) break;
+
+                buffer += decoder.decode(value, { stream: true });
+                const lines = buffer.split('\n');
+                buffer = lines.pop();
+
+                for (const line of lines) {
+                    if (!line.startsWith('data: ')) continue;
+
+                    let data;
+                    try { data = JSON.parse(line.substring(6)); } catch { continue; }
+
+                    // ---- Pipeline Events ----
+                    if (data.type === 'security_start') {
+                        setPipelineStep('ps-security', 'active', 'checking...');
+                    }
+                    else if (data.type === 'security_done') {
+                        setPipelineStep('ps-security', 'done', `${data.latencyMs}ms`);
+                    }
+                    else if (data.type === 'blocked') {
+                        setPipelineStep('ps-security', 'error', 'BLOCKED');
+                        outputArea.innerHTML = `<div class="workflow-panel"><div class="workflow-panel-body" style="color: var(--error); text-align: center; padding-top: 3rem;">
+                            <p style="font-size: 1.5rem;">🛡️ Blocked</p>
+                            <p style="margin-top: 8px;">Reason: ${data.reason || 'Security violation detected'}</p>
+                        </div></div>`;
+                        outputArea.className = 'workflow-output-area layout-single';
+                    }
+                    else if (data.type === 'routing_start') {
+                        setPipelineStep('ps-routing', 'active', 'classifying...');
+                    }
+                    else if (data.type === 'routing_done') {
+                        setPipelineStep('ps-routing', 'done', `${data.complexity} (${data.latencyMs}ms)`);
+                    }
+                    else if (data.type === 'mode_selected') {
+                        resolvedMode = data.mode;
+                        buildLayout(resolvedMode);
+                        setPipelineStep('ps-execution', 'active', resolvedMode.toUpperCase());
+                        // Highlight the mode button
+                        modeBtns.forEach(b => b.classList.remove('active'));
+                        const activeBtn = document.getElementById(`mode-${resolvedMode}`);
+                        if (activeBtn) activeBtn.classList.add('active');
+                    }
+
+                    // ---- Step Events ----
+                    else if (data.type === 'step_start') {
+                        setActivePanel(data.step);
+                        setStatus(data.step, 'Streaming...', 'var(--primary-blue)');
+                        if (data.model) setModelName(data.step, data.model);
+                    }
+                    else if (data.type === 'delta') {
+                        appendToPanel(data.step, data.content);
+                    }
+                    else if (data.type === 'step_done') {
+                        completePanel(data.step);
+                        const detail = data.latencyMs ? `${data.latencyMs}ms` : '';
+                        setStatus(data.step, detail || 'Done', 'var(--success)');
+                    }
+
+                    // ---- Balanced Mode: Parallel Results ----
+                    else if (data.type === 'parallel_results') {
+                        // Fill both parallel panels with their text
+                        const elA = document.getElementById('output-parallel-a');
+                        const elB = document.getElementById('output-parallel-b');
+                        if (elA) { elA.innerHTML = ''; elA.textContent = data.resultA.text; }
+                        if (elB) { elB.innerHTML = ''; elB.textContent = data.resultB.text; }
+                        setModelName('parallel-a', data.resultA.model);
+                        setModelName('parallel-b', data.resultB.model);
+                        setStatus('parallel-a', `${data.resultA.latencyMs}ms`, 'var(--success)');
+                        setStatus('parallel-b', `${data.resultB.latencyMs}ms`, 'var(--success)');
+                        completePanel('parallel-a');
+                        completePanel('parallel-b');
+                    }
+
+                    // ---- Pipeline Complete ----
+                    else if (data.type === 'pipeline_done') {
+                        setPipelineStep('ps-execution', 'done', '✓');
+                        setPipelineStep('ps-output', 'done', `${data.totalPipelineMs}ms`);
+                        pipelineSummary.style.display = 'flex';
+                        pipelineSummary.innerHTML = `
+                            <span>✅ Pipeline complete</span>
+                            <span>Mode: <strong>${data.mode.toUpperCase()}</strong></span>
+                            <span>Total: <strong>${data.totalPipelineMs}ms</strong></span>
+                        `;
+                    }
+
+                    // ---- Error ----
+                    else if (data.type === 'error') {
+                        console.error('Pipeline error:', data.message);
+                        setPipelineStep('ps-execution', 'error', 'Error');
+                    }
+                }
+            }
+
+        } catch (error) {
+            console.error('Orchestrator Error:', error);
+            setPipelineStep('ps-execution', 'error', 'Failed');
+        } finally {
+            btnWorkflow.disabled = false;
+            btnWorkflow.textContent = 'Start Orchestration';
+        }
+    });
+
+    inputPrompt.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') btnWorkflow.click();
+    });
+}
+

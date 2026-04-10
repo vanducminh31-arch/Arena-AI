@@ -8,6 +8,7 @@ import { globalErrorHandler } from './middleware/errorHandler.js';
 import battleRoutes from './routes/battle.js';
 import codebaseRoutes from './routes/codebase.js';
 import healthRoutes from './routes/health.js';
+import workflowRoutes from './routes/workflow.js';
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -21,6 +22,7 @@ app.use('/api/', apiRateLimiter);
 app.use('/api/battle', battleRoutes);
 app.use('/api/codebase', codebaseRoutes);
 app.use('/api/health', healthRoutes);
+app.use('/api/workflow', workflowRoutes);
 
 // Compatibility Mounts (for old frontend)
 app.use('/api/arena/chat', battleRoutes);
